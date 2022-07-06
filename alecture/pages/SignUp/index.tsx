@@ -7,12 +7,12 @@ import { Success, Form, Error, Label, Input, LinkContainer, Button, Header } fro
 import { Link, Redirect } from 'react-router-dom';
 
 const SignUp = () => {
-  const { data, error, revalidate } = useSWR('/api/users', fetcher);
+  const { data, error, revalidate, mutate } = useSWR('http://localhost:3095/api/users', fetcher);
 
   const [email, onChangeEmail] = useInput('');
   const [nickname, onChangeNickname] = useInput('');
-  const [password, , setPassword] = useInput('');
-  const [passwordCheck, , setPasswordCheck] = useInput('');
+  const [password, setPassword] = useState('');
+  const [passwordCheck, setPasswordCheck] = useState('');
   const [mismatchError, setMismatchError] = useState(false);
   const [signUpError, setSignUpError] = useState('');
   const [signUpSuccess, setSignUpSuccess] = useState(false);
@@ -24,7 +24,6 @@ const SignUp = () => {
     },
     [passwordCheck],
   );
-
   const onChangePasswordCheck = useCallback(
     (e) => {
       setPasswordCheck(e.target.value);
@@ -32,32 +31,30 @@ const SignUp = () => {
     },
     [password],
   );
-
   const onSubmit = useCallback(
     (e) => {
       e.preventDefault();
-      if (!mismatchError && nickname) {
-        console.log('서버로 회원가입하기');
+
+      if (!mismatchError) {
         setSignUpError('');
         setSignUpSuccess(false);
+
         axios
           .post('/api/users', {
             email,
             nickname,
             password,
           })
-          .then((response) => {
-            console.log(response);
+          .then((res) => {
             setSignUpSuccess(true);
           })
-          .catch((error) => {
-            console.log(error.response);
-            setSignUpError(error.response.data);
+          .catch((err) => {
+            setSignUpError(err.response.data);
           })
           .finally(() => {});
       }
     },
-    [email, nickname, password, passwordCheck, mismatchError],
+    [email, nickname, password, passwordCheck],
   );
 
   if (data === undefined) {
@@ -65,7 +62,7 @@ const SignUp = () => {
   }
 
   if (data) {
-    return <Redirect to="/workspace/sleact/channel/일반" />;
+    return <Redirect to="/workspace/channel" />;
   }
 
   return (
