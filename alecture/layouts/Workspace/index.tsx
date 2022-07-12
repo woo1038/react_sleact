@@ -37,11 +37,15 @@ const DirectMessage = loadable(() => import('@pages/DirectMessage'));
 
 const Workspace: VFC = () => {
   const { workspace } = useParams<{ workspace: string }>();
-  const { data, error, revalidate, mutate } = useSWR<IUser | false>('http://localhost:3095/api/users', fetcher, {
-    dedupingInterval: 2000,
-  });
-  const { data: channelData } = useSWR<IChannel[]>(
-    data ? `http://localhost:3095/api/workspaces/${workspace}/channels` : null,
+  const { data: userData, error, revalidate, mutate } = useSWR<IUser | false>(
+    'http://localhost:3095/api/users',
+    fetcher,
+    {
+      dedupingInterval: 2000,
+    },
+  );
+  const { data: channelData, revalidate: revaliChannel } = useSWR<IChannel[]>(
+    userData ? `http://localhost:3095/api/workspaces/${workspace}/channels` : null,
     fetcher,
   );
 
@@ -122,9 +126,11 @@ const Workspace: VFC = () => {
     setShowCreateChannelModal(true);
   }, []);
 
-  const onClickInviteWorkspace = useCallback(() => {}, []);
+  const onClickInviteWorkspace = useCallback(() => {
+    setShowInviteWorkspaceModal(true);
+  }, []);
 
-  if (!data) {
+  if (!userData) {
     return <Redirect to="/login" />;
   }
 
@@ -133,13 +139,13 @@ const Workspace: VFC = () => {
       <Header>
         <RightMenu>
           <span onClick={onClickUserProfile}>
-            <ProfileImg src={gravatar.url(data.email, { s: '28px', d: 'retro' })} alt={data.email} />
+            <ProfileImg src={gravatar.url(userData.email, { s: '28px', d: 'retro' })} alt={userData.email} />
             {showUserMenu && (
               <Menu style={{ right: 0, top: 38 }} show={showUserMenu} onCloseModal={onCloseUserProfile}>
                 <ProfileModal>
-                  <img src={gravatar.url(data.email, { s: '28px', d: 'retro' })} alt={data.email} />
+                  <img src={gravatar.url(userData.email, { s: '28px', d: 'retro' })} alt={userData.email} />
                   <div>
-                    <span id="profile-name">{data.nickname}</span>
+                    <span id="profile-name">{userData.nickname}</span>
                     <span id="profile-active">active</span>
                   </div>
                 </ProfileModal>
@@ -151,7 +157,7 @@ const Workspace: VFC = () => {
       </Header>
       <WorkspaceWrapper>
         <Workspaces>
-          {data?.Workspaces.map((ws) => {
+          {userData?.Workspaces.map((ws) => {
             return (
               <Link key={ws.id} to={`/workspace/${123}/channel/일반`}>
                 <WorkspaceButton>{ws.name.slice(0, 1).toUpperCase()}</WorkspaceButton>
@@ -172,11 +178,10 @@ const Workspace: VFC = () => {
                 <button onClick={onLogout}>로그아웃</button>
               </WorkspaceModal>
             </Menu>
+            {channelData?.map((v) => {
+              return <div>{v.name}</div>;
+            })}
           </MenuScroll>
-          {console.log(channelData)}
-          {channelData?.map((v) => {
-            <div>{v.name}</div>;
-          })}
         </Channels>
         <Chats>
           <Switch>
