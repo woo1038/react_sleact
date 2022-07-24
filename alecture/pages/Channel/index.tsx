@@ -13,7 +13,7 @@ const Channal = () => {
   const { data: userData } = useSWR(`/api/workspaces/${workspace}/users/${id}`, fetcher);
   const { data: myData } = useSWR(`/api/users`, fetcher);
   const [chat, onChangeChat, setChat] = useInput('');
-  
+
   const onSubmitForm = useCallback(
     (e) => {
       e.preventDefault();
@@ -26,7 +26,7 @@ const Channal = () => {
   return (
     <Container>
       <Header>채널!</Header>
-      <ChatList />
+      {/* <ChatList /> */}
       <ChatBox chat={chat} onChangeChat={onChangeChat} onSubmitForm={onSubmitForm} placeholder="" />
     </Container>
   );
